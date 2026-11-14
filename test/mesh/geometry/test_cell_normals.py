@@ -156,6 +156,20 @@ def test_float16_normal_intermediates_do_not_overflow(device, vertices, expected
         torch.testing.assert_close(result, expected, rtol=0, atol=0)
 
 
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+@pytest.mark.parametrize("n_spatial_dims", [2, 3, 4, 5])
+def test_reduced_precision_matches_float32_rounded_once(device, dtype, n_spatial_dims):
+    """Every branch gives its float32 normal rounded once. In 5D this also
+    checks that 16-bit inputs work, since ``torch.linalg.det`` has no float16
+    or bfloat16 kernels."""
+    vecs = torch.randn(64, n_spatial_dims - 1, n_spatial_dims, device=device)
+    vecs = vecs.to(dtype)
+    expected = compute_cell_normals(vecs.float()).to(dtype)
+    result = compute_cell_normals(vecs)
+    assert result.dtype == dtype
+    torch.testing.assert_close(result, expected, rtol=0, atol=0)
+
+
 @pytest.mark.parametrize("scale", [1.0e-7, 1.0, 1.0e7])
 def test_triangle_normal_gradients_are_scale_invariant(scale):
     """Rescaling a well-conditioned triangle preserves its shape derivatives."""

@@ -106,11 +106,6 @@ def compute_cell_areas(
             result = _tetrahedron_volumes(vectors)
         case _:
             result = _gram_det_volumes(vectors)
-
-    # Lock the dtype contract: under CUDA ``torch.autocast`` (e.g. bf16),
-    # reductions like ``aten::sum`` that the closed-form branches rely on are on
-    # the fp32 cast list, so the result can silently come back as fp32 even when
-    # ``relative_vectors`` is bf16.
     return result.to(relative_vectors.dtype)
 
 
